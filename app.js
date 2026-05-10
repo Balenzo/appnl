@@ -84,17 +84,6 @@ const favoriteOptions = {
   url: '#'
 },
 
-'tournaments-belgium': {
-  icon: '🇧🇪',
-  title: 'Tornooien België',
-  url: getBelgiumTournamentsUrl()
-},
-
-'tournaments-netherlands': {
-  icon: '🇳🇱',
-  title: 'Tornooien Nederland',
-  url: getNetherlandsTournamentsUrl()
-}
 };
 
 // Favorieten laden
@@ -245,18 +234,6 @@ function openProfile() {
   }
 
   window.open(url, '_blank');
-}
-
-function getBelgiumTournamentsUrl() {
-  const today = new Date().toISOString().split('T')[0];
-
-  return `https://cuescore.com/tournaments/?date=${today}&sort=asc&c=1000237&d=0&q=`;
-}
-
-function getNetherlandsTournamentsUrl() {
-  const today = new Date().toISOString().split('T')[0];
-
-  return `https://cuescore.com/tournaments/?date=${today}&sort=asc&c=1000231&d=0&q=`;
 }
 
 document.addEventListener('DOMContentLoaded', function () {
