@@ -82,7 +82,7 @@ const favoriteOptions = {
   icon: '🎱',
   title: 'Start2Pool',
   url: '#'
-},
+}
 
 };
 
