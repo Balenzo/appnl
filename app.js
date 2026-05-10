@@ -237,8 +237,6 @@ function openProfile() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-  // rest van je code...
-});
   // Favorieten tonen
   renderFavorites();
 
