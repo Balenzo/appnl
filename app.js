@@ -43,7 +43,7 @@ const favoriteOptions = {
     title: 'Beker',
     url: 'https://cuescore.com/tournament/%2A%2A%2ABEKER%252FCOUPE+BPBF+VLAANDEREN+2026%2A%2A%2A/74130139'
   },
-  'competition-NL': {
+  'competition-nl': {
     icon: '🇳🇱',
     title: 'Competitie NL',
     url: 'https://cuescore.com/tournament/Pool+Derde+Divisie+Zuid-West+2025%252F2026/61204957'
