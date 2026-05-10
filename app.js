@@ -314,9 +314,46 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Service Worker
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js')
-      .then(() => console.log('Service Worker geregistreerd'))
-      .catch(err => console.log('Service Worker fout:', err));
-  }
+  navigator.serviceWorker.register('sw.js')
+    .then(registration => {
+      console.log('Service Worker geregistreerd');
+
+      // Controleer onmiddellijk op updates
+      registration.update();
+
+      // Als er al een nieuwe versie klaarstaat
+      if (registration.waiting) {
+        if (confirm('Er is een nieuwe versie van de app beschikbaar. Wil je nu vernieuwen?')) {
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+          window.location.reload();
+        }
+      }
+
+      // Luister naar nieuwe updates
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+
+        if (!newWorker) return;
+
+        newWorker.addEventListener('statechange', () => {
+          if (
+            newWorker.state === 'installed' &&
+            navigator.serviceWorker.controller
+          ) {
+            if (confirm('Er is een nieuwe versie van de app beschikbaar. Wil je nu vernieuwen?')) {
+              newWorker.postMessage({ type: 'SKIP_WAITING' });
+              window.location.reload();
+            }
+          }
+        });
+      });
+    })
+    .catch(err => console.log('Service Worker fout:', err));
+
+  // Herladen zodra de nieuwe service worker actief wordt
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload();
+  });
+}
 
 });
