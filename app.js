@@ -192,8 +192,11 @@ function openFavoritesEditor() {
 }
 
 function closeFavoritesEditor() {
-  document.getElementById('favoritesModal')
-    ?.classList.remove('show');
+  const modal = document.getElementById('favoritesModal');
+
+  if (modal) {
+    modal.classList.remove('show');
+  }
 }
 
 function saveFavoritesSelection() {
