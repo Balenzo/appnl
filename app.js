@@ -26,57 +26,57 @@ const favoriteOptions = {
   'competition-first': {
     icon: '🏆',
     title: 'Eerste Klasse',
-    url: '#'
+    url: 'https://cuescore.com/tournament/%2A%2A%2ACOMPETITIE+EERSTE+PROVINCIALE+BPBF+VLAANDEREN+SEIZOEN+2026%2A%2A%2A/74130085'
   },
   'competition-second': {
     icon: '🏆',
     title: 'Tweede Klasse',
-    url: '#'
+    url: 'https://cuescore.com/tournament/%2A%2A%2ACOMPETITIE+TWEEDE+PROVINCIALE+BPBF+VLAANDEREN+SEIZOEN+2026%2A%2A%2A/74130109'
   },
   'competition-third': {
     icon: '🏆',
     title: 'Derde Klasse',
-    url: '#'
+    url: 'https://cuescore.com/tournament/%2A%2A%2ACOMPETITIE+DERDE+PROVINCIALE+BPBF+VLAANDEREN+SEIZOEN+2026%2A%2A%2A/74130127'
   },
   'competition-cup': {
     icon: '🏆',
     title: 'Beker',
-    url: '#'
+    url: 'https://cuescore.com/tournament/%2A%2A%2ABEKER%252FCOUPE+BPBF+VLAANDEREN+2026%2A%2A%2A/74130139'
   },
   'breakplay-1': {
     icon: '🎱',
     title: 'Break & Play Reeks 1',
-    url: '#'
+    url: 'https://cuescore.com/tournament/POULE+1+BREAK+%2526+PLAY+-ZOMER+2026+%2AClubcompetitie%2A/79104529'
   },
   'breakplay-2': {
     icon: '🎱',
     title: 'Break & Play Reeks 2',
-    url: '#'
+    url: 'https://cuescore.com/tournament/POULE+2+BREAK+%2526+PLAY+-ZOMER+2026+%2AClubcompetitie%2A/79105222'
   },
   'breakplay-3': {
     icon: '🎱',
     title: 'Break & Play Reeks 3',
-    url: '#'
+    url: 'https://cuescore.com/tournament/POULE+3+BREAK+%2526+PLAY+-ZOMER+2026+%2AClubcompetitie%2A/79105237'
   },
   'breakplay-4': {
     icon: '🎱',
     title: 'Break & Play Reeks 4',
-    url: '#'
+    url: 'https://cuescore.com/tournament/POULE+4+BREAK+%2526+PLAY+-ZOMER+2026+%2AClubcompetitie%2A/79105255'
   },
   'breakplay-5': {
     icon: '🎱',
     title: 'Break & Play Reeks 5',
-    url: '#'
+    url: 'https://cuescore.com/tournament/POULE+5+BREAK+%2526+PLAY+-ZOMER+2026+%2AClubcompetitie%2A/79105273'
   },
   facebook: {
     icon: '📘',
     title: 'Facebook',
-    url: 'https://www.facebook.com/'
+    url: 'https://www.facebook.com/billiardsendarts'
   },
   instagram: {
     icon: '📸',
     title: 'Instagram',
-    url: 'https://www.instagram.com/'
+    url: 'https://www.instagram.com/balenzo_billiards_darts/'
   },
  start2pool: {
   icon: '🎱',
@@ -87,13 +87,13 @@ const favoriteOptions = {
 'tournaments-belgium': {
   icon: '🇧🇪',
   title: 'Tornooien België',
-  url: '#'
+  url: getBelgiumTournamentsUrl()
 },
 
 'tournaments-netherlands': {
   icon: '🇳🇱',
   title: 'Tornooien Nederland',
-  url: '#'
+  url: getNetherlandsTournamentsUrl()
 }
 };
 
@@ -247,12 +247,21 @@ function openProfile() {
   window.open(url, '_blank');
 }
 
-// ===============================
-// APP INITIALISATIE
-// ===============================
+function getBelgiumTournamentsUrl() {
+  const today = new Date().toISOString().split('T')[0];
+
+  return `https://cuescore.com/tournaments/?date=${today}&sort=asc&c=1000237&d=0&q=`;
+}
+
+function getNetherlandsTournamentsUrl() {
+  const today = new Date().toISOString().split('T')[0];
+
+  return `https://cuescore.com/tournaments/?date=${today}&sort=asc&c=1000231&d=0&q=`;
+}
 
 document.addEventListener('DOMContentLoaded', function () {
-
+  // rest van je code...
+});
   // Favorieten tonen
   renderFavorites();
 
