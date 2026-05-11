@@ -447,3 +447,51 @@ button.competition-card {
   background: linear-gradient(180deg, #d60000, #8b0000);
   color: #fff;
 }
+
+/* Snelle Acties met foto's */
+.quick-action-card {
+  display: flex;
+  flex-direction: column;
+  background: #111;
+  border: 1px solid rgba(255, 0, 0, 0.5);
+  border-radius: 18px;
+  overflow: hidden;
+  text-decoration: none;
+  color: #fff;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.quick-action-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.quick-action-card img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+
+.quick-action-content {
+  padding: 14px;
+}
+
+.quick-action-title {
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.quick-action-subtitle {
+  font-size: 1.2rem;
+  color: #bdbdbd;
+  line-height: 1.4;
+}
+
+.quick-action-external {
+  margin-top: 10px;
+  text-align: right;
+  font-size: 1.6rem;
+  color: #fff;
+}
