@@ -482,8 +482,17 @@ button.competition-card {
   font-weight: 700 !important;
   line-height: 1.2 !important;
   margin-bottom: 6px !important;
-  word-break: break-word !important;
-  overflow-wrap: break-word !important;
+
+  /* Woorden niet middenin afbreken */
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  white-space: normal !important;
+
+  /* Maximaal 2 regels */
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
 }
 
 .quick-action-subtitle {
