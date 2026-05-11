@@ -478,21 +478,14 @@ button.competition-card {
 }
 
 .quick-action-title {
-  font-size: 0.9rem !important;
+  font-size: 0.8rem !important;
   font-weight: 700 !important;
   line-height: 1.2 !important;
   margin-bottom: 6px !important;
-
-  /* Woorden niet middenin afbreken */
-  word-break: normal !important;
+  word-break: keep-all !important;
   overflow-wrap: normal !important;
   white-space: normal !important;
-
-  /* Maximaal 2 regels */
-  display: -webkit-box !important;
-  -webkit-line-clamp: 2 !important;
-  -webkit-box-orient: vertical !important;
-  overflow: hidden !important;
+  hyphens: none !important;
 }
 
 .quick-action-subtitle {
