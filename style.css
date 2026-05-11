@@ -478,15 +478,17 @@ button.competition-card {
 }
 
 .quick-action-title {
-  font-size: 1.6rem;
-  font-weight: 600;
-  margin-bottom: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 .quick-action-subtitle {
-  font-size: 1.2rem;
+  font-size: 0.75rem;
   color: #bdbdbd;
-  line-height: 1.4;
+  line-height: 1.35;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .quick-action-external {
