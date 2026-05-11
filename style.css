@@ -502,3 +502,9 @@ button.competition-card {
   font-size: 1.2rem !important;
   color: #ffffff !important;
 }
+
+.competition-icon img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
