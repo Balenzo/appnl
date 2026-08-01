@@ -46,7 +46,7 @@ const favoriteOptions = {
   'competition-nl': {
     icon: '🇳🇱',
     title: 'Competitie NL',
-    url: 'https://cuescore.com/tournament/Pool+Derde+Divisie+Zuid-West+2025%252F2026/61204957'
+    url: 'https://cuescore.com/tournament/Pool+Tweede+Divisie+Zuid+2026%252F2027/83574892'
   },
   'breakplay-1': {
     icon: '🎱',
