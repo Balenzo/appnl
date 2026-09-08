@@ -3179,43 +3179,51 @@ async function loadCueScoreActiveMatches() {
                             String(individualMatch.table || "");
 
                         const tableMatch =
-                            tableText.match(/Table\s+(\d+)/i);
+                            tableText.match(/Table\s+(\d+)\s+BEB&D/i);
 
                         if (!tableMatch) {
                             return;
                         }
 
-                        const tableId =
-                            Number(tableMatch[1]);
+                        const tableNumber =
+    String(Number(tableMatch[1]));
 
-                        if (!tableId) {
-                            return;
-                        }
+const balEnzoTable =
+    balEnzoTables.find(
+        table => String(table.name) === tableNumber
+    );
 
-                        const startTime =
-                            individualMatch.startTime
-                                ? new Date(
-                                    individualMatch.startTime
-                                ).getTime()
-                                : 0;
+if (!balEnzoTable) {
+    return;
+}
 
-                        const existing =
-                            latestPerTable[tableId];
+const tableId =
+    balEnzoTable.id;
 
-                        const existingStartTime =
-                            existing?.startTime
-                                ? new Date(
-                                    existing.startTime
-                                ).getTime()
-                                : 0;
+const startTime =
+    individualMatch.startTime
+        ? new Date(
+            individualMatch.startTime
+        ).getTime()
+        : 0;
 
-                        if (
-                            !existing ||
-                            startTime > existingStartTime
-                        ) {
-                            latestPerTable[tableId] =
-                                individualMatch;
-                        }
+const existing =
+    latestPerTable[tableId];
+
+const existingStartTime =
+    existing?.startTime
+        ? new Date(
+            existing.startTime
+        ).getTime()
+        : 0;
+
+if (
+    !existing ||
+    startTime > existingStartTime
+) {
+    latestPerTable[tableId] =
+        individualMatch;
+}
 
                     });
 
@@ -3476,10 +3484,9 @@ function processCueScoreLiveMessage(message) {
     if (!tableId) return;
 
     if (
-        match.matchstatusCode !== 1 ||
-        match.matchstatus !== "playing"
+    Number(match.matchstatusCode) !== 1 ||
+    match.matchstatus !== "playing"
     ) {
-        delete liveScoresData[tableId];
         return;
     }
 
@@ -3559,7 +3566,11 @@ async function refreshLiveScores() {
 
     loadBalEnzoTables();
     await loadCueScoreActiveMatches();
-    connectCueScoreLive();
+
+    if (!liveScoresSocket ||
+        liveScoresSocket.readyState !== WebSocket.OPEN) {
+        connectCueScoreLive();
+    }
 
 }
 
