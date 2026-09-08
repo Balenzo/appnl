@@ -2960,6 +2960,11 @@ function openLiveScores() {
 
 function closeLiveScores() {
 
+    if (liveScoresRefreshTimer) {
+        clearInterval(liveScoresRefreshTimer);
+        liveScoresRefreshTimer = null;
+    }
+
     document.querySelectorAll(".screen").forEach(screen => {
         screen.classList.remove("active");
     });
@@ -2988,6 +2993,7 @@ const balEnzoTables = [
 
 let liveScoresSocket = null;
 let liveScoresData = {};
+let liveScoresRefreshTimer = null;
 
 
 /* ===========================
@@ -3074,11 +3080,11 @@ async function loadBalEnzoTables() {
         document.getElementById("liveScoresStatus");
 
     if (status) {
-        status.textContent = tr("live.loading", "Live gegevens laden...");
+        status.textContent =
+            tr("live.connected", "● Live gegevens actief");
     }
 
     renderLiveTables();
-
 }
 
 const balEnzoCueScoreEvents = [];
@@ -3275,13 +3281,21 @@ if (
         });
 
         Object.assign(
-            liveScoresData,
-            currentLiveScores
-        );
+    liveScoresData,
+    currentLiveScores
+);
 
-        renderLiveTables();
+renderLiveTables();
 
-    } catch (error) {
+const status =
+    document.getElementById("liveScoresStatus");
+
+if (status) {
+    status.textContent =
+        tr("live.connected", "● Live gegevens actief");
+}
+
+} catch (error) {
 
         console.error(
             "❌ CueScore livegegevens laden mislukt:",
@@ -3298,11 +3312,15 @@ if (
 
 function connectCueScoreLive() {
 
-    if (liveScoresSocket) {
-        try {
-            liveScoresSocket.close();
-        } catch (e) {}
-    }
+    if (
+    liveScoresSocket &&
+    (
+        liveScoresSocket.readyState === WebSocket.OPEN ||
+        liveScoresSocket.readyState === WebSocket.CONNECTING
+    )
+) {
+    return;
+}
 
     try {
 
@@ -3359,28 +3377,18 @@ function connectCueScoreLive() {
             }
         );
 
+liveScoresSocket.addEventListener(
+    "close",
+    function () {
 
-        liveScoresSocket.addEventListener(
-            "close",
-            function () {
-
-                console.log(
-                    "🔴 CueScore WebSocket gesloten"
-                );
-
-                const status =
-                    document.getElementById(
-                        "liveScoresStatus"
-                    );
-
-                if (status) {
-                    status.textContent =
-                        tr("live.disconnected", "Live verbinding verbroken");
-                }
-
-            }
+        console.log(
+            "🔴 CueScore WebSocket gesloten"
         );
 
+        liveScoresSocket = null;
+
+    }
+);
 
         liveScoresSocket.addEventListener(
             "error",
@@ -3550,6 +3558,14 @@ openLiveScores = async function () {
 
     loadBalEnzoTables();
     await loadCueScoreActiveMatches();
+
+    if (!liveScoresRefreshTimer) {
+        liveScoresRefreshTimer = setInterval(
+            loadCueScoreActiveMatches,
+            15000
+        );
+    }
+
     connectCueScoreLive();
 
 };
