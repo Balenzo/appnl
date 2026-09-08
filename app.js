@@ -3081,7 +3081,7 @@ async function loadBalEnzoTables() {
 
     if (status) {
         status.textContent =
-            tr("live.connected", "● Live gegevens actief");
+            tr("live.loading", "Live gegevens laden...");
     }
 
     renderLiveTables();
@@ -3181,11 +3181,32 @@ async function loadCueScoreActiveMatches() {
 
                     individualMatches.forEach(individualMatch => {
 
-                        const tableText =
-                            String(individualMatch.table || "");
+    const raceTo =
+        Number(individualMatch.raceTo);
 
-                        const tableMatch =
-                            tableText.match(/Table\s+(\d+)\s+BEB&D/i);
+    const scoreA =
+        Number(individualMatch.scoreA);
+
+    const scoreB =
+        Number(individualMatch.scoreB);
+
+    const isFinished =
+        Number.isFinite(raceTo) &&
+        raceTo > 0 &&
+        (
+            scoreA >= raceTo ||
+            scoreB >= raceTo
+        );
+
+    if (isFinished) {
+        return;
+    }
+
+    const tableText =
+        String(individualMatch.table || "");
+
+    const tableMatch =
+        tableText.match(/Table\s+(\d+)\s+BEB&D/i);
 
                         if (!tableMatch) {
                             return;
@@ -3386,6 +3407,19 @@ liveScoresSocket.addEventListener(
         );
 
         liveScoresSocket = null;
+
+        const status =
+            document.getElementById(
+                "liveScoresStatus"
+            );
+
+        if (status) {
+            status.textContent =
+                tr(
+                    "live.disconnected",
+                    "Live verbinding verbroken"
+                );
+        }
 
     }
 );
