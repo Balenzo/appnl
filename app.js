@@ -1,4 +1,4 @@
-const APP_CHANGELOG_VERSION = "1.0";
+const APP_CHANGELOG_VERSION = "2.0";
 
 let currentCompetitionData = null;
 let currentCompetitionTournamentId = null;
@@ -524,11 +524,12 @@ function showChangelogIfNeeded() {
 
   alert(
     "🎉 Wat is er nieuw?\n\n" +
-    "• Live scores in app zelf\n" +
-    "• Competities + Break & Play rechtstreeks in app te bekijken\n" +
-    "• Tafelreservatie gebeurt in app zelf\n" +
-    "• Moneygames toegevoegd (ook voor trainingen zonder €)\n" +
-    "• Diverse verbeteringen"
+    "• 🆕 Start2Pool toegevoegd met oefeningen op verschillende niveaus\n" +
+    "• 🎱 Sparring Matches toegevoegd voor oefenwedstrijden\n" +
+    "• 🔴 Meldingen toegevoegd voor nieuwe activiteit bij Sparring Matches\n" +
+    "• 📺 Live Scores verder verbeterd\n" +
+    "• 🌍 Ondersteuning voor Nederlands, Frans en Engels\n" +
+    "• ⚡ Diverse verbeteringen en optimalisaties"
   );
 
   localStorage.setItem(
@@ -4677,12 +4678,35 @@ async function openMoneygames() {
   document.getElementById("moneygamesScreen").classList.add("active");
   window.scrollTo(0, 0);
 
-  showMoneygamesHelpIfNeeded(); 
+  showMoneygamesHelpIfNeeded();
 
   const user = await getCurrentUser();
 
   if (user) {
-    showOpenMoneygames();
+    const now =
+  new Date().toISOString();
+
+const storageKey =
+  `moneygamesLastSeenOpen_${user.id}`;
+
+const personalStorageKey =
+  `moneygamesLastSeenPersonal_${user.id}`;
+
+localStorage.setItem(
+  storageKey,
+  now
+);
+
+localStorage.setItem(
+  personalStorageKey,
+  now
+);
+
+    await markSelectedMoneygameReactionsAsSeen(user);
+
+await updateMoneygamesNotificationBadge();
+
+showOpenMoneygames();
   }
 }
 
@@ -4693,4 +4717,69 @@ function closeMoneygames() {
 
   document.getElementById("homeScreen").classList.add("active");
   window.scrollTo(0, 0);
+}
+
+/* =========================================================
+   START2POOL LEVEL TABS
+========================================================= */
+
+document.querySelectorAll(".start2pool-level-tab").forEach(button => {
+    button.addEventListener("click", () => {
+
+        const level = button.dataset.level;
+
+        // Actieve tab verwijderen
+        document.querySelectorAll(".start2pool-level-tab").forEach(tab => {
+            tab.classList.remove("active");
+        });
+
+        // Geklikte tab actief maken
+        button.classList.add("active");
+
+        // Alle level-inhoud verbergen
+        document.querySelectorAll(".start2pool-level-content").forEach(content => {
+            content.classList.remove("active");
+        });
+
+        // Juiste level tonen
+        const selectedLevel =
+            document.getElementById(
+                `start2PoolLevel${level.toUpperCase()}`
+            );
+
+        if (selectedLevel) {
+            selectedLevel.classList.add("active");
+        }
+    });
+});
+
+/* =========================================================
+   START2POOL EXERCISE NAVIGATION
+========================================================= */
+
+function openStart2PoolExercise() {
+
+    document
+        .querySelectorAll(".screen")
+        .forEach(screen => screen.classList.remove("active"));
+
+    document
+        .getElementById("start2PoolExerciseScreen")
+        .classList.add("active");
+
+    window.scrollTo(0, 0);
+}
+
+
+function closeStart2PoolExercise() {
+
+    document
+        .querySelectorAll(".screen")
+        .forEach(screen => screen.classList.remove("active"));
+
+    document
+        .getElementById("start2PoolScreen")
+        .classList.add("active");
+
+    window.scrollTo(0, 0);
 }
