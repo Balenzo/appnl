@@ -7618,3 +7618,17 @@ filter:
   }
 
 }
+
+/* 4 competitietabs altijd op één rij */
+#competitionsScreen .tab-bar {
+  gap: 6px;
+}
+
+#competitionsScreen .tab {
+  min-width: 0;
+  padding: 10px 4px;
+  font-size: 11px;
+  line-height: 1.15;
+  white-space: normal;
+  text-align: center;
+}

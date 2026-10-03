@@ -1516,18 +1516,37 @@
   <span data-i18n="ui.competities.2">Competities</span>
 </div>
       <div class="tab-bar">
-        <button
-          class="tab active"
-          data-i18n="ui.brabant.antwerpen"
-          data-tab="brabant"
-        >
-          Brabant / Antwerpen
-        </button>
-        <button class="tab" data-tab="breakplay">Break &amp; Play</button>
-        <button class="tab" data-i18n="ui.tornooien" data-tab="tournaments">
-          Tornooien
-        </button>
-      </div>
+  <button
+    class="tab active"
+    data-i18n="ui.brabant.antwerpen"
+    data-tab="brabant"
+  >
+    Brabant / Antwerpen
+  </button>
+
+  <button
+    class="tab"
+    data-tab="netherlands"
+  >
+    Competitie NL
+  </button>
+
+  <button
+    class="tab"
+    data-tab="breakplay"
+  >
+    Break &amp; Play
+  </button>
+
+  <button
+    class="tab"
+    data-i18n="ui.tornooien"
+    data-tab="tournaments"
+  >
+    Tornooien
+  </button>
+</div>
+
       <main class="content">
         <!-- BRABANT / ANTWERPEN -->
         <div class="tab-content active" id="tab-brabant">
@@ -1641,28 +1660,6 @@
             </div>
             <div class="competition-arrow">›</div>
           </div>
-          
-<!-- START COMPETITIE NL - DIT VOLLEDIGE BLOK VERWIJDEREN IN APP -->
-          <div
-            class="competition-card competition-card-photo"
-            onclick="openCompetitionDetail(83574892)"
-            style="cursor: pointer; --competition-bg: url('style/competitienl.webp');"
-          >
-            <div class="competition-icon">🇳🇱</div>
-            <div class="competition-info">
-              <div class="competition-title" data-i18n="ui.competitie.nl">
-                Competitie NL
-              </div>
-              <div
-                class="competition-subtitle"
-                data-i18n="ui.standen.en.uitslagen"
-              >
-                Standen en uitslagen
-              </div>
-            </div>
-            <div class="competition-arrow">›</div>
-          </div>
-<!-- EINDE COMPETITIE NL - DIT VOLLEDIGE BLOK VERWIJDEREN IN APP -->
 
           <!-- SPELER ZOEKEN -->
           <button
@@ -1690,7 +1687,80 @@
           </button>
 
         </div>
-        <!-- BREAK & PLAY -->
+
+        <!-- COMPETITIE NEDERLAND -->
+<div class="tab-content" id="tab-netherlands">
+
+  <!-- EREDIVISIE -->
+<div
+  class="competition-card competition-card-photo"
+  onclick="openCompetitionDetail(83574874)"
+  style="cursor: pointer; --competition-bg: url('style/competitienl.webp');"
+>
+  <div class="competition-icon">🇳🇱</div>
+
+  <div class="competition-info">
+    <div class="competition-title">
+      Eredivisie
+    </div>
+
+    <div class="competition-subtitle">
+      Standen en uitslagen
+    </div>
+  </div>
+
+  <div class="competition-arrow">›</div>
+</div>
+
+<!-- TWEEDE KLASSE -->
+<div
+  class="competition-card competition-card-photo"
+  onclick="openCompetitionDetail(83574892)"
+  style="cursor: pointer; --competition-bg: url('style/competitienl.webp');"
+>
+  <div class="competition-icon">🇳🇱</div>
+
+  <div class="competition-info">
+    <div class="competition-title">
+      Tweede Klasse
+    </div>
+
+    <div class="competition-subtitle">
+      Standen en uitslagen
+    </div>
+  </div>
+
+  <div class="competition-arrow">›</div>
+</div>
+
+  <!-- SPELER ZOEKEN -->
+  <button
+    type="button"
+    class="competition-card player-search-card"
+    onclick="openPlayerSearch()"
+  >
+    <div class="player-search-icon">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="11" cy="11" r="6.5"></circle>
+        <path d="M16 16l4.5 4.5"></path>
+      </svg>
+    </div>
+
+    <div class="competition-info">
+      <div class="competition-title">
+        Speler zoeken
+      </div>
+      <div class="competition-subtitle">
+        Zoek een speler op CueScore
+      </div>
+    </div>
+
+    <div class="competition-arrow">›</div>
+  </button>
+
+</div>
+
+<!-- BREAK & PLAY -->
         <div class="tab-content" id="tab-breakplay">
           <!-- REEKS 1 -->
           <div

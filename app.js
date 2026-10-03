@@ -1663,7 +1663,9 @@ const mvpPanel =
 const hasMvp = [
     "74130085",
     "74130109",
-    "74130127"
+    "74130127",
+    "83574874",
+    "83574892"
 ].includes(String(tournamentId));
 
 if (mvpTab && mvpPanel) {
