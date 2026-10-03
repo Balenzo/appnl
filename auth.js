@@ -1258,6 +1258,7 @@ async function updateMoneygamesAuthUI() {
 
     await updateMoneygamesNotificationBadge();
     await updateMoneygamesActionPopup(user);
+    await updateMoneygamesPushButton();
 
     if (accountEmail) {
       accountEmail.textContent = user.email || "";
@@ -2278,7 +2279,10 @@ async function loadMyOpenMoneygames(user) {
   const reactionUsers = [
     ...new Set(
       (reactions || [])
-        .map(reaction => reaction.user_id)
+        .flatMap(reaction => [
+          reaction.user_id,
+          reaction.partner_id
+        ])
         .filter(Boolean)
     )
   ];
@@ -2303,9 +2307,23 @@ async function loadMyOpenMoneygames(user) {
   container.innerHTML = games.map(game => {
     const dateTime = formatMoneygameDateTime(game.scheduled_at);
     const gameReactions =
-      (reactions || []).filter(
-        reaction => reaction.moneygame_id === game.id
-      );
+      (reactions || []).filter(reaction => {
+        if (reaction.moneygame_id !== game.id) {
+          return false;
+        }
+
+        if (game.game_type === "doubles") {
+          return (
+            reaction.user_id !== game.created_by &&
+            reaction.partner_id !== game.created_by &&
+            reaction.partner_id &&
+            reaction.partner_status ===
+              MONEYGAME_PARTNER_STATUSES.ACCEPTED
+          );
+        }
+
+        return reaction.user_id !== game.created_by;
+      });
 
     let reactionsHtml = "";
 
@@ -2327,10 +2345,16 @@ async function loadMyOpenMoneygames(user) {
             const playerName = formatMoneygameName(profile);
 
             if (game.game_type === "doubles") {
+              const partnerProfile =
+                profileMap[reaction.partner_id];
+
+              const partnerName =
+                formatMoneygameName(partnerProfile);
+
               return `
                 <div class="moneygames-candidate">
                   <div class="moneygames-candidate-name">
-                    👤 ${escapeMoneygameHtml(playerName)}
+                    👥 ${escapeMoneygameHtml(playerName)} &amp; ${escapeMoneygameHtml(partnerName)}
                   </div>
 
                   <div class="moneygames-candidate-meta">
@@ -2647,11 +2671,41 @@ async function loadMyReactions(user) {
     gameMap[game.id] = game;
   });
 
+  const partnerIds = [
+    ...new Set(
+      reactions
+        .map(reaction => reaction.partner_id)
+        .filter(Boolean)
+    )
+  ];
+
+  const partnerProfileMap = {};
+
+  if (partnerIds.length > 0) {
+    const partnerProfilesRpc = await callMoneygameRpc(
+      "get_moneygame_profiles",
+      {
+        user_ids: partnerIds
+      }
+    );
+
+    if (partnerProfilesRpc.success) {
+      (partnerProfilesRpc.data || []).forEach(profile => {
+        partnerProfileMap[profile.id] = profile;
+      });
+    }
+  }
+
   container.innerHTML = reactions
     .map(reaction => {
       const game = gameMap[reaction.moneygame_id];
 
       if (!game) return "";
+
+      // Een gebruiker mag zijn eigen oproep niet als eigen reactie zien.
+      if (game.created_by === user.id) {
+        return "";
+      }
 
       const dateTime =
         formatMoneygameDateTime(game.scheduled_at);
@@ -2665,12 +2719,63 @@ async function loadMyReactions(user) {
         statusText = moneygameTr("moneygames.youAreSelected", "✓ Je bent geselecteerd.");
       }
 
+      let partnerHtml = "";
+
       if (
-        reaction.partner_status ===
-        MONEYGAME_PARTNER_STATUSES.PENDING
+        game.game_type === "doubles" &&
+        reaction.partner_id
       ) {
-        statusText =
-          moneygameTr("moneygames.partnerConfirmationPending", "Partnerbevestiging in afwachting.");
+        const partnerProfile =
+          partnerProfileMap[reaction.partner_id];
+
+        const partnerName =
+          formatMoneygameName(partnerProfile);
+
+        let partnerStatusText = "";
+
+        if (
+          reaction.partner_status ===
+          MONEYGAME_PARTNER_STATUSES.PENDING
+        ) {
+          partnerStatusText =
+            `🟠 Wacht op bevestiging van ${partnerName}`;
+        } else if (
+          reaction.partner_status ===
+          MONEYGAME_PARTNER_STATUSES.ACCEPTED
+        ) {
+          partnerStatusText =
+            `🟢 ${partnerName} heeft bevestigd`;
+        } else if (
+          reaction.partner_status ===
+          MONEYGAME_PARTNER_STATUSES.DECLINED
+        ) {
+          partnerStatusText =
+            `🔴 ${partnerName} heeft geweigerd`;
+        }
+
+        partnerHtml = `
+          <div class="moneygames-candidate-meta">
+            👥 Dubbelpartner:
+            <strong>${escapeMoneygameHtml(partnerName)}</strong>
+          </div>
+
+          ${
+            partnerStatusText
+              ? `
+                <div class="moneygames-pending-label">
+                  ${escapeMoneygameHtml(partnerStatusText)}
+                </div>
+              `
+              : ""
+          }
+        `;
+
+        if (
+          reaction.partner_status ===
+          MONEYGAME_PARTNER_STATUSES.PENDING
+        ) {
+          statusText = "";
+        }
       }
 
       return `
@@ -2702,9 +2807,17 @@ async function loadMyReactions(user) {
 
           </div>
 
-          <div class="moneygames-pending-label">
-            ${escapeMoneygameHtml(statusText)}
-          </div>
+          ${partnerHtml}
+
+          ${
+            statusText
+              ? `
+                <div class="moneygames-pending-label">
+                  ${escapeMoneygameHtml(statusText)}
+                </div>
+              `
+              : ""
+          }
 
           ${
             reaction.status ===
