@@ -651,14 +651,10 @@ function showChangelogIfNeeded() {
     return;
   }
 
-  alert(
+alert(
     "🎉 Wat is er nieuw?\n\n" +
-    "• 👤 Profiel zichtbaar in app met alle info\n" +
-    "• 🎱 Tornooien zichtbaar in app\n" +
-    "• 🔔 Volledig nieuwe lay-out\n" +
-    "• 🔎 Spelers zoeken op CueScore en uitgebreide spelersprofielen bekijken\n" +
-    "• 🏆 Tornooien uitgebreid met standen, podium, spelers en wedstrijden\n" +
-    "• ⚡ Diverse verbeteringen in snelheid, navigatie en gebruiksgemak"
+    "• 🇳🇱 Eredivisie NL toegevoegd\n" +
+    "• 🏆 MVP-klassement toegevoegd voor Nederlandse competities"
 );
 
   localStorage.setItem(
