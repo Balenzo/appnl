@@ -2906,10 +2906,13 @@ async function loadMyDoublesInvitations(user) {
       `)
       .in("id", gameIds)
       .eq("game_type", "doubles")
-      .eq(
-        "status",
-        MONEYGAME_STATUSES.PENDING_PARTNER
-      );
+.in(
+  "status",
+  [
+    MONEYGAME_STATUSES.PENDING_PARTNER,
+    MONEYGAME_STATUSES.OPEN
+  ]
+);
 
   if (gamesError) {
     console.error(

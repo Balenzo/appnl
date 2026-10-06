@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bal-enzo-v57';
+const CACHE_NAME = 'bal-enzo-v58';
 
 const FILES_TO_CACHE = [
   './',
