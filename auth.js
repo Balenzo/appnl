@@ -1728,11 +1728,14 @@ async function submitNewMoneygame() {
   const discipline =
     moneygameEl("moneygamesDiscipline")?.value || "";
 
-  const raceTo =
-    Number(moneygameEl("moneygamesRaceTo")?.value || 0);
+const raceTo =
+  Number(moneygameEl("moneygamesRaceTo")?.value || 0);
 
-  const date =
-    moneygameEl("moneygamesDate")?.value || "";
+const handicap =
+  moneygameEl("moneygamesHandicap")?.checked === true;
+
+const date =
+  moneygameEl("moneygamesDate")?.value || "";
 
   const time =
     moneygameEl("moneygamesTime")?.value || "";
@@ -1807,14 +1810,15 @@ async function submitNewMoneygame() {
     "Sparring Match plaatsen..."
   );
 
-  const rpc = await callMoneygameRpc("create_moneygame", {
-    p_game_type: gameType,
-    p_discipline: discipline,
-    p_race_to: raceTo,
-    p_stake_amount: stakeAmount,
-    p_scheduled_at: scheduledAt,
-    p_partner_id: gameType === "doubles" ? partner : null
-  });
+const rpc = await callMoneygameRpc("create_moneygame", {
+  p_game_type: gameType,
+  p_discipline: discipline,
+  p_race_to: raceTo,
+  p_stake_amount: stakeAmount,
+  p_scheduled_at: scheduledAt,
+  p_partner_id: gameType === "doubles" ? partner : null,
+  p_handicap: handicap
+});
 
   if (!rpc.success) {
     setMoneygameMessage(
@@ -1847,11 +1851,17 @@ async function submitNewMoneygame() {
     );
   }
 
-  hideNewMoneygameForm();
+const handicapInput = moneygameEl("moneygamesHandicap");
 
-  if (createdGame) {
-    console.log("Moneygame aangemaakt:", createdGame);
-  }
+if (handicapInput) {
+  handicapInput.checked = false;
+}
+
+hideNewMoneygameForm();
+
+if (createdGame) {
+  console.log("Moneygame aangemaakt:", createdGame);
+}
 
   await loadOpenMoneygames();
   await loadMyMoneygames();
@@ -1889,15 +1899,16 @@ async function loadOpenMoneygames() {
   const { data: games, error } = await supabaseClient
     .from("moneygames")
     .select(`
-      id,
-      created_by,
-      game_type,
-      discipline,
-      race_to,
-      scheduled_at,
-      status,
-      created_at
-    `)
+  id,
+  created_by,
+  game_type,
+  discipline,
+  race_to,
+  handicap,
+  scheduled_at,
+  status,
+  created_at
+`)
     .eq("status", MONEYGAME_STATUSES.OPEN)
     .order("scheduled_at", { ascending: true });
 
@@ -2075,9 +2086,19 @@ const filteredGames = (games || []).filter(game => {
         </div>
 
         <div class="moneygames-open-info">
-          <strong>
-            Race To ${escapeMoneygameHtml(game.race_to)}
-          </strong>
+         <strong>
+  Race To ${escapeMoneygameHtml(game.race_to)}
+</strong>
+
+${
+  game.handicap
+    ? `
+      <span>
+        ⚖️ Handicap
+      </span>
+    `
+    : ""
+}
 
           <span>
             📅 ${escapeMoneygameHtml(dateTime.full)}
@@ -2093,6 +2114,151 @@ const filteredGames = (games || []).filter(game => {
 
 
 // =========================================================
+// BERICHTEN BIJ SPARRING MATCH-REACTIES
+// =========================================================
+
+async function loadMoneygameConversation(reactionId) {
+  const rpc = await callMoneygameRpc(
+    "get_moneygame_messages",
+    {
+      p_reaction_id: reactionId
+    }
+  );
+
+  if (!rpc.success) {
+    console.error(
+      "Berichten bij Sparring Match laden fout:",
+      rpc.error
+    );
+    return [];
+  }
+
+  return Array.isArray(rpc.data)
+    ? rpc.data
+    : [];
+}
+
+
+function buildMoneygameConversationBlock(
+  reactionId,
+  messages,
+  currentUserId,
+  otherName,
+  fallbackMessage = ""
+) {
+  const conversationMessages = Array.isArray(messages)
+    ? messages
+    : [];
+
+  let messagesHtml = "";
+
+  if (conversationMessages.length > 0) {
+    messagesHtml = conversationMessages
+      .map(message => {
+        const senderName =
+          message.sender_id === currentUserId
+            ? "Jij"
+            : otherName || "Andere speler";
+
+        return `
+          <div class="moneygames-candidate-meta">
+            💬 <strong>${escapeMoneygameHtml(senderName)}:</strong>
+            ${escapeMoneygameHtml(message.message)}
+          </div>
+        `;
+      })
+      .join("");
+  } else if (fallbackMessage) {
+    messagesHtml = `
+      <div class="moneygames-candidate-meta">
+        💬 <strong>${escapeMoneygameHtml(otherName || "Andere speler")}:</strong>
+        ${escapeMoneygameHtml(fallbackMessage)}
+      </div>
+    `;
+  }
+
+  return `
+    <div class="moneygames-conversation">
+      ${messagesHtml}
+
+      <button
+        type="button"
+        class="moneygames-select-opponent-btn"
+        onclick="sendMoneygameConversationMessage(
+          '${escapeMoneygameAttribute(reactionId)}'
+        )"
+      >
+        💬 Bericht sturen
+      </button>
+    </div>
+  `;
+}
+
+
+async function sendMoneygameConversationMessage(reactionId) {
+  const message = prompt(
+    "Schrijf je bericht:",
+    ""
+  );
+
+  if (message === null) return;
+
+  const cleanMessage = message.trim();
+
+  if (!cleanMessage) {
+    alert("Schrijf eerst een bericht.");
+    return;
+  }
+
+  const rpc = await callMoneygameRpc(
+    "send_moneygame_message",
+    {
+      p_reaction_id: reactionId,
+      p_message: cleanMessage
+    }
+  );
+
+  if (!rpc.success) {
+    alert(
+      rpc.error?.message ||
+      "Het bericht kon niet worden verstuurd."
+    );
+    return;
+  }
+
+  await loadMyMoneygames();
+  await loadOpenMoneygames();
+}
+
+
+async function saveInitialMoneygameMessage(
+  reactionId,
+  message
+) {
+  const cleanMessage = String(message || "").trim();
+
+  if (!reactionId || !cleanMessage) {
+    return;
+  }
+
+  const rpc = await callMoneygameRpc(
+    "send_moneygame_message",
+    {
+      p_reaction_id: reactionId,
+      p_message: cleanMessage
+    }
+  );
+
+  if (!rpc.success) {
+    console.error(
+      "Eerste Sparring Match-bericht opslaan fout:",
+      rpc.error
+    );
+  }
+}
+
+
+// =========================================================
 // SINGLES REAGEREN
 // =========================================================
 
@@ -2104,17 +2270,27 @@ async function reactToMoneygame(moneygameId, button) {
     return;
   }
 
-  if (button) {
-    button.disabled = true;
-    button.textContent = "Reactie versturen...";
-  }
+const message = prompt(
+  "Wil je een bericht toevoegen aan je reactie?\n\nBijvoorbeeld: Ik kan spelen, maar pas vanaf 21:00.\n\nLaat leeg als je geen bericht wilt toevoegen.",
+  ""
+);
 
-  const rpc = await callMoneygameRpc(
-    "react_to_moneygame",
-    {
-      p_moneygame_id: moneygameId
-    }
-  );
+if (message === null) {
+  return;
+}
+
+if (button) {
+  button.disabled = true;
+  button.textContent = "Reactie versturen...";
+}
+
+const rpc = await callMoneygameRpc(
+  "react_to_moneygame",
+  {
+    p_moneygame_id: moneygameId,
+    p_message: message
+  }
+);
 
   if (!rpc.success) {
     console.error("Reactie opslaan fout:", rpc.error);
@@ -2129,6 +2305,16 @@ async function reactToMoneygame(moneygameId, button) {
       "Reactie versturen is niet gelukt."
     );
     return;
+  }
+
+  const createdReaction =
+    normalizeRpcSingle(rpc.data);
+
+  if (createdReaction?.id) {
+    await saveInitialMoneygameMessage(
+      createdReaction.id,
+      message
+    );
   }
 
   if (button) {
@@ -2215,16 +2401,17 @@ async function loadMyOpenMoneygames(user) {
 
   const { data: games, error } = await supabaseClient
     .from("moneygames")
-    .select(`
-      id,
-      created_by,
-      game_type,
-      discipline,
-      race_to,
-      scheduled_at,
-      status,
-      created_at
-    `)
+.select(`
+  id,
+  created_by,
+  game_type,
+  discipline,
+  race_to,
+  handicap,
+  scheduled_at,
+  status,
+  created_at
+`)
     .eq("created_by", user.id)
     .eq("status", MONEYGAME_STATUSES.OPEN)
     .order("scheduled_at", { ascending: true });
@@ -2258,14 +2445,15 @@ async function loadMyOpenMoneygames(user) {
   const { data: reactions, error: reactionsError } =
     await supabaseClient
       .from("moneygame_reactions")
-      .select(`
-        id,
-        moneygame_id,
-        user_id,
-        status,
-        partner_id,
-        partner_status
-      `)
+.select(`
+  id,
+  moneygame_id,
+  user_id,
+  status,
+  partner_id,
+  partner_status,
+  message
+`)
       .in("moneygame_id", gameIds)
       .eq("status", MONEYGAME_REACTION_STATUSES.ACTIVE);
 
@@ -2275,6 +2463,15 @@ async function loadMyOpenMoneygames(user) {
       reactionsError
     );
   }
+
+  const conversationMap = {};
+
+  await Promise.all(
+    (reactions || []).map(async reaction => {
+      conversationMap[reaction.id] =
+        await loadMoneygameConversation(reaction.id);
+    })
+  );
 
   const reactionUsers = [
     ...new Set(
@@ -2358,10 +2555,18 @@ async function loadMyOpenMoneygames(user) {
                   </div>
 
                   <div class="moneygames-candidate-meta">
-                    ${moneygameTr("moneygames.doublesCandidate", "Kandidatuur voor Doubles")}
-                  </div>
+  ${moneygameTr("moneygames.doublesCandidate", "Kandidatuur voor Doubles")}
+</div>
 
-                  <button
+${buildMoneygameConversationBlock(
+  reaction.id,
+  conversationMap[reaction.id] || [],
+  user.id,
+  `${playerName} & ${partnerName}`,
+  reaction.message || ""
+)}
+
+<button
                     type="button"
                     class="moneygames-select-opponent-btn"
                     onclick="chooseDoublesOpponent(
@@ -2377,11 +2582,19 @@ async function loadMyOpenMoneygames(user) {
 
             return `
               <div class="moneygames-candidate">
-                <div class="moneygames-candidate-name">
-                  👤 ${escapeMoneygameHtml(playerName)}
-                </div>
+<div class="moneygames-candidate-name">
+  👤 ${escapeMoneygameHtml(playerName)}
+</div>
 
-                <button
+${buildMoneygameConversationBlock(
+  reaction.id,
+  conversationMap[reaction.id] || [],
+  user.id,
+  playerName,
+  reaction.message || ""
+)}
+
+<button
                   type="button"
                   class="moneygames-select-opponent-btn"
                   onclick="chooseMoneygameOpponent(
@@ -2419,25 +2632,46 @@ async function loadMyOpenMoneygames(user) {
         </div>
 
         <div class="moneygames-open-info">
-          <strong>
-            Race To ${escapeMoneygameHtml(game.race_to)}
-          </strong>
+<strong>
+  Race To ${escapeMoneygameHtml(game.race_to)}
+</strong>
 
-          <span>
-            📅 ${escapeMoneygameHtml(dateTime.full)}
-          </span>
+${
+  game.handicap
+    ? `
+      <span>
+        ⚖️ Handicap
+      </span>
+    `
+    : ""
+}
+
+<span>
+  📅 ${escapeMoneygameHtml(dateTime.full)}
+</span>
 
         </div>
 
-        ${reactionsHtml}
+${reactionsHtml}
 
-        <button
-          type="button"
-          class="moneygames-cancel-open-btn"
-          onclick="cancelOpenMoneygame('${escapeMoneygameAttribute(game.id)}')"
-        >
-          ${moneygameTr("moneygames.cancelCall", "Oproep annuleren")}
-        </button>
+<button
+  type="button"
+  class="moneygames-select-opponent-btn"
+  onclick="updateMoneygameSchedule(
+    '${escapeMoneygameAttribute(game.id)}',
+    '${escapeMoneygameAttribute(game.scheduled_at)}'
+  )"
+>
+  📅 Datum/tijd wijzigen
+</button>
+
+<button
+  type="button"
+  class="moneygames-cancel-open-btn"
+  onclick="cancelOpenMoneygame('${escapeMoneygameAttribute(game.id)}')"
+>
+  ${moneygameTr("moneygames.cancelCall", "Oproep annuleren")}
+</button>
       </div>
     `;
   }).join("");
@@ -2542,6 +2776,104 @@ async function cancelOpenMoneygame(moneygameId) {
 // GEPLANDE MATCH ANNULEREN
 // =========================================================
 
+// =========================================================
+// DATUM / TIJD GEPLANDE MATCH WIJZIGEN
+// =========================================================
+
+async function updateMoneygameSchedule(
+  moneygameId,
+  currentScheduledAt
+) {
+  const currentDate = new Date(currentScheduledAt);
+
+  const year = currentDate.getFullYear();
+  const month = String(
+    currentDate.getMonth() + 1
+  ).padStart(2, "0");
+  const day = String(
+    currentDate.getDate()
+  ).padStart(2, "0");
+  const hours = String(
+    currentDate.getHours()
+  ).padStart(2, "0");
+  const minutes = String(
+    currentDate.getMinutes()
+  ).padStart(2, "0");
+
+  const currentDateValue =
+    `${year}-${month}-${day}`;
+
+  const currentTimeValue =
+    `${hours}:${minutes}`;
+
+  const newDate = prompt(
+    "Nieuwe datum (JJJJ-MM-DD):",
+    currentDateValue
+  );
+
+  if (newDate === null) return;
+
+  const newTime = prompt(
+    "Nieuwe starttijd (UU:MM):",
+    currentTimeValue
+  );
+
+  if (newTime === null) return;
+
+  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+  const timePattern = /^\d{2}:\d{2}$/;
+
+  if (
+    !datePattern.test(newDate) ||
+    !timePattern.test(newTime)
+  ) {
+    alert(
+      "Gebruik een geldige datum en tijd, bijvoorbeeld 2026-10-10 en 20:00."
+    );
+    return;
+  }
+
+  const newScheduledAt =
+    new Date(`${newDate}T${newTime}:00`);
+
+  if (
+    Number.isNaN(newScheduledAt.getTime()) ||
+    newScheduledAt <= new Date()
+  ) {
+    alert(
+      "Kies een geldige datum en starttijd in de toekomst."
+    );
+    return;
+  }
+
+  const confirmed = confirm(
+    `Sparring Match verplaatsen naar ${newDate} om ${newTime}?`
+  );
+
+  if (!confirmed) return;
+
+  const rpc = await callMoneygameRpc(
+    "update_moneygame_schedule",
+    {
+      p_moneygame_id: moneygameId,
+      p_scheduled_at: newScheduledAt.toISOString()
+    }
+  );
+
+  if (!rpc.success) {
+    alert(
+      rpc.error?.message ||
+      "Datum en starttijd konden niet gewijzigd worden."
+    );
+    return;
+  }
+
+  alert("Datum en starttijd zijn gewijzigd.");
+
+  await loadMyMoneygames();
+  await loadOpenMoneygames();
+}
+
 async function cancelMoneygameMatch(moneygameId) {
   const confirmed = confirm(
     moneygameTr("moneygames.confirmCancelPlanned", "Wil je deze geplande Sparring Match annuleren?")
@@ -2599,6 +2931,7 @@ async function loadMyReactions(user) {
       status,
       partner_id,
       partner_status,
+      message,
       created_at
     `)
     .eq("user_id", user.id)
@@ -2647,7 +2980,8 @@ async function loadMyReactions(user) {
         game_type,
         discipline,
         race_to,
-          scheduled_at,
+        handicap,
+        scheduled_at,
         status
       `)
             .in("id", gameIds)
@@ -2678,6 +3012,15 @@ async function loadMyReactions(user) {
         .filter(Boolean)
     )
   ];
+
+  const conversationMap = {};
+
+  await Promise.all(
+    reactions.map(async reaction => {
+      conversationMap[reaction.id] =
+        await loadMoneygameConversation(reaction.id);
+    })
+  );
 
   const partnerProfileMap = {};
 
@@ -2801,6 +3144,16 @@ async function loadMyReactions(user) {
               Race To ${escapeMoneygameHtml(game.race_to)}
             </strong>
 
+            ${
+              game.handicap
+                ? `
+                  <span>
+                    ⚖️ Handicap
+                  </span>
+                `
+                : ""
+            }
+
             <span>
               📅 ${escapeMoneygameHtml(dateTime.full)}
             </span>
@@ -2808,6 +3161,14 @@ async function loadMyReactions(user) {
           </div>
 
           ${partnerHtml}
+
+          ${buildMoneygameConversationBlock(
+            reaction.id,
+            conversationMap[reaction.id] || [],
+            user.id,
+            "Organisator",
+            reaction.message || ""
+          )}
 
           ${
             statusText
@@ -3132,15 +3493,16 @@ async function loadMyPlannedMoneygames(user) {
   const { data: plannedGames, error: plannedError } =
     await supabaseClient
       .from("moneygames")
-      .select(`
-        id,
-        created_by,
-        game_type,
-        discipline,
-        race_to,
-          scheduled_at,
-        status
-      `)
+.select(`
+  id,
+  created_by,
+  game_type,
+  discipline,
+  race_to,
+  handicap,
+  scheduled_at,
+  status
+`)  
       .in("id", participantGameIds)
       .in(
         "status",
@@ -3195,6 +3557,48 @@ async function loadMyPlannedMoneygames(user) {
     plannedGameIds
   );
 
+  const {
+    data: selectedReactions,
+    error: selectedReactionsError
+  } = await supabaseClient
+    .from("moneygame_reactions")
+    .select(`
+      id,
+      moneygame_id,
+      user_id,
+      partner_id,
+      message,
+      status
+    `)
+    .in("moneygame_id", plannedGameIds)
+    .eq(
+      "status",
+      MONEYGAME_REACTION_STATUSES.SELECTED
+    );
+
+  if (selectedReactionsError) {
+    console.error(
+      "Gesprekken van geplande matches laden fout:",
+      selectedReactionsError
+    );
+  }
+
+  const selectedReactionMap = {};
+
+  (selectedReactions || []).forEach(reaction => {
+    selectedReactionMap[reaction.moneygame_id] =
+      reaction;
+  });
+
+  const plannedConversationMap = {};
+
+  await Promise.all(
+    (selectedReactions || []).map(async reaction => {
+      plannedConversationMap[reaction.id] =
+        await loadMoneygameConversation(reaction.id);
+    })
+  );
+
   const cards = plannedGames.map(game => {
     const dateTime =
       formatMoneygameDateTime(game.scheduled_at);
@@ -3237,6 +3641,43 @@ async function loadMyPlannedMoneygames(user) {
 
     const existingResult =
       resultMap[game.id] || null;
+
+    const selectedReaction =
+      selectedReactionMap[game.id] || null;
+
+    let conversationOtherName = "Andere speler";
+
+    if (selectedReaction) {
+      const reactionParticipant =
+        gameParticipants.find(
+          participant =>
+            participant.user_id ===
+            selectedReaction.user_id
+        );
+
+      if (reactionParticipant) {
+        conversationOtherName =
+          `${reactionParticipant.first_name || ""} ${reactionParticipant.last_name || ""}`.trim() ||
+          "Andere speler";
+      }
+
+      if (user.id !== game.created_by) {
+        conversationOtherName = "Organisator";
+      }
+    }
+
+    const conversationHtml =
+      selectedReaction
+        ? buildMoneygameConversationBlock(
+            selectedReaction.id,
+            plannedConversationMap[
+              selectedReaction.id
+            ] || [],
+            user.id,
+            conversationOtherName,
+            selectedReaction.message || ""
+          )
+        : "";
 
     const resultHtml =
       buildMoneygameResultHtml(
@@ -3287,31 +3728,54 @@ async function loadMyPlannedMoneygames(user) {
 
         <div class="moneygames-open-info">
 
-          <strong>
-            Race To ${escapeMoneygameHtml(game.race_to)}
-          </strong>
+<strong>
+  Race To ${escapeMoneygameHtml(game.race_to)}
+</strong>
 
-          <span>
-            📅 ${escapeMoneygameHtml(dateTime.full)}
-          </span>
+${
+  game.handicap
+    ? `
+      <span>
+        ⚖️ Handicap
+      </span>
+    `
+    : ""
+}
+
+<span>
+  📅 ${escapeMoneygameHtml(dateTime.full)}
+</span>
 
         </div>
 
+        ${conversationHtml}
+
         ${resultHtml}
 
-        ${
-          game.created_by === user.id
-            ? `
-              <button
-                type="button"
-                class="moneygames-cancel-match-btn"
-                onclick="cancelMoneygameMatch('${escapeMoneygameAttribute(game.id)}')"
-              >
-                ${moneygameTr("moneygames.cancelMatch", "Match annuleren")}
-              </button>
-            `
-            : ""
-        }
+${
+  game.created_by === user.id
+    ? `
+      <button
+        type="button"
+        class="moneygames-select-opponent-btn"
+        onclick="updateMoneygameSchedule(
+          '${escapeMoneygameAttribute(game.id)}',
+          '${escapeMoneygameAttribute(game.scheduled_at)}'
+        )"
+      >
+        📅 Datum/tijd wijzigen
+      </button>
+
+      <button
+        type="button"
+        class="moneygames-cancel-match-btn"
+        onclick="cancelMoneygameMatch('${escapeMoneygameAttribute(game.id)}')"
+      >
+        ${moneygameTr("moneygames.cancelMatch", "Match annuleren")}
+      </button>
+    `
+    : ""
+}
 
       </div>
     `;
@@ -3985,19 +4449,33 @@ async function showDoublesReactionDialog(moneygameId) {
 
   const partner = partners[index];
 
-  const confirmed = confirm(
-    moneygameTr("moneygames.confirmInvitePartner", "Wil je {{name}} uitnodigen als partner?", { name: formatMoneygameName(partner) })
-  );
+const confirmed = confirm(
+  moneygameTr(
+    "moneygames.confirmInvitePartner",
+    "Wil je {{name}} uitnodigen als partner?",
+    { name: formatMoneygameName(partner) }
+  )
+);
 
-  if (!confirmed) return;
+if (!confirmed) return;
 
-  const rpc = await callMoneygameRpc(
-    "create_doubles_reaction",
-    {
-      p_moneygame_id: moneygameId,
-      p_partner_id: partner.id
-    }
-  );
+const message = prompt(
+  "Wil je een bericht toevoegen aan jullie reactie?\n\nBijvoorbeeld: Wij kunnen spelen, maar pas vanaf 21:00.\n\nLaat leeg als je geen bericht wilt toevoegen.",
+  ""
+);
+
+if (message === null) {
+  return;
+}
+
+const rpc = await callMoneygameRpc(
+  "create_doubles_reaction",
+  {
+    p_moneygame_id: moneygameId,
+    p_partner_id: partner.id,
+    p_message: message
+  }
+);
 
   if (!rpc.success) {
     alert(
@@ -4005,6 +4483,16 @@ async function showDoublesReactionDialog(moneygameId) {
       "Kandidaat-duo kon niet worden aangemaakt."
     );
     return;
+  }
+
+  const createdReaction =
+    normalizeRpcSingle(rpc.data);
+
+  if (createdReaction?.id) {
+    await saveInitialMoneygameMessage(
+      createdReaction.id,
+      message
+    );
   }
 
   alert(

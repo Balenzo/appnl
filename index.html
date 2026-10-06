@@ -797,16 +797,39 @@
                 <label data-i18n="ui.race.to" for="moneygamesRaceTo">
                   Race To
                 </label>
-                <input
-                  data-i18n-placeholder="ui.bijvoorbeeld.7"
-                  id="moneygamesRaceTo"
-                  min="1"
-                  placeholder="Bijvoorbeeld 7"
-                  step="1"
-                  type="number"
-                />
+               <input
+  data-i18n-placeholder="ui.bijvoorbeeld.7"
+  id="moneygamesRaceTo"
+  min="1"
+  placeholder="Bijvoorbeeld 7"
+  step="1"
+  type="number"
+/>
 
-                <label data-i18n="ui.datum" for="moneygamesDate"> Datum </label>
+<label
+  for="moneygamesHandicap"
+  style="
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    margin-bottom: 14px;
+    cursor: pointer;
+  "
+>
+  <input
+    id="moneygamesHandicap"
+    type="checkbox"
+    style="
+      width: 20px;
+      height: 20px;
+      margin: 0;
+    "
+  />
+  <span>Deze match wordt met handicap gespeeld</span>
+</label>
+
+<label data-i18n="ui.datum" for="moneygamesDate"> Datum </label>
                 <div
                   class="moneygames-picker-field"
                   onclick="
